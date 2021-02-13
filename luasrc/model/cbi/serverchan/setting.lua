@@ -29,11 +29,12 @@ a.default=0
 a.rmempty = true
 
 a=s:taboption("basic", ListValue,"send_tg",translate("推送模式"))
-a.default=""
+a.default="3"
 a.rmempty = true
 a:value("",translate("微信"))
-a:value("2",translate("微信测试号版"))
 a:value("1",translate("Telegram"))
+a:value("2",translate("微信测试号版"))
+a:value("3",translate("企业微信推送"))
 
 a=s:taboption("basic", Value,"sckey",translate('SCKEY'), translate("Serverchan Sckey").."<br>调用代码获取<a href='http://sc.ftqq.com' target='_blank'>点击这里</a><br><br>")
 a.rmempty = true
@@ -46,6 +47,26 @@ a:depends("send_tg","2")
 a=s:taboption("basic", Value, "tgtoken", translate("tg推送链接"),translate("").."<br>目前公众号已停用，需要自建服务器<br>获取机器人<a href='https://github.com/Fndroid/tg_push_bot' target='_blank'>点击这里</a><br>此处填入推送链接，如https://tgbot.lbyczf.com/sendMessage/:Token<br>")
 a.rmempty = true
 a:depends("send_tg","1")
+
+a=s:taboption("basic", Value, "qyid", translate("企业ID"))
+a.rmempty = true
+a:depends("send_tg","3")
+
+a=s:taboption("basic", Value, "qySecret", translate("小程序Secret"),translate(""))
+a.rmempty = true
+a:depends("send_tg","3")
+
+a=s:taboption("basic", Value, "qyAgentId", translate("小程序AgentId"),translate(""))
+a.rmempty = true
+a:depends("send_tg","3")
+
+a=s:taboption("basic", Value, "qytouser", translate("成员ID"),translate(""))
+a.rmempty = true
+a:depends("send_tg","3")
+
+a=s:taboption("basic", Value, "qythumb_media_id", translate("图片ID"),translate(""))
+a.rmempty = true
+a:depends("send_tg","3")
 
 a=s:taboption("basic", Value,"device_name",translate('本设备名称'))
 a.rmempty = true
