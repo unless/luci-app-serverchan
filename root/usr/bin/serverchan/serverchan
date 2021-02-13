@@ -10,7 +10,7 @@ function get_config(){
 
 # 初始化设置信息
 function read_config(){
-	get_config "serverchan_enable" "sckey" "serverchan_ipv4" "ipv4_interface" "ipv4_URL" "serverchan_ipv6" "ipv6_interface" "ipv6_URL" "serverchan_up" "serverchan_down" "serverchan_sheep" "serverchan_whitelist" "serverchan_blacklist" "serverchan_interface" "starttime" "endtime" "cpuload_enable" "cpuload" "temperature_enable" "temperature" "device_name" "err_enable" "network_err_event" "err_sheep_enable" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" "soc_code" "sleeptime" "up_timeout" "down_timeout" "device_aliases" "debuglevel" "cpuload" "temperature" "send_mode" "regular_time" "regular_time_2" "regular_time_3" "interval_time" "thread_num" "timeout_retry_count" "send_tg" "tgtoken" "err_device_aliases" "sctkey" "oui_dir" "oui_data" "client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist"
+	get_config "serverchan_enable" "sckey" "serverchan_ipv4" "ipv4_interface" "ipv4_URL" "serverchan_ipv6" "ipv6_interface" "ipv6_URL" "serverchan_up" "serverchan_down" "serverchan_sheep" "serverchan_whitelist" "serverchan_blacklist" "serverchan_interface" "starttime" "endtime" "cpuload_enable" "cpuload" "temperature_enable" "temperature" "device_name" "err_enable" "network_err_event" "err_sheep_enable" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" "soc_code" "sleeptime" "up_timeout" "down_timeout" "device_aliases" "debuglevel" "cpuload" "temperature" "send_mode" "regular_time" "regular_time_2" "regular_time_3" "interval_time" "thread_num" "timeout_retry_count" "send_tg" "tgtoken" "qyid" "qySecret" "qyAgentId" "qytouser" "qythumb_media_id" "err_device_aliases" "sctkey" "oui_dir" "oui_data" "client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist"
 	for str_version in "wrtbwmon" "iputils-arping" "curl" "iw"; do
 		eval `echo ${str_version:0:2}"_version"`=`opkg list-installed|grep -w ^${str_version}|awk '{print $3}'` 2>/dev/null
 	done
@@ -43,7 +43,7 @@ function serverchan_init(){
 	for read_str in "ip_version" "cu_version"; do
 		[ -z `eval echo '$'$read_str` ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】依赖项 iputils-arping、curl 未安装，请确认插件是否正常运行" >> ${logfile}
 	done
-	[ -z "$sckey" ] && [ -z "$sctkey" ] && [ -z "$tgtoken" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的 sckey " >> ${logfile} && return 1
+	[ -z "$sckey" ] && [ -z "$sctkey" ] && [ -z "$tgtoken" ] && [ -z "$qyid" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的 sckey " >> ${logfile} && return 1
 	local interfacelist=`getinterfacelist` && [ -z "$interfacelist" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法正确获取接口信息，请确认插件是否正常运行" >> ${logfile}
 	return 0
 }
@@ -909,6 +909,39 @@ function send(){
 	[ "$send_disturb" -eq "0" ] && [ -z "$send_tg" ] && curl -s "http://sc.ftqq.com/${sckey}.send?text=${send_title}" -d "&desp=${nowtime}${markdown_linefeed}${send_content}" >/dev/null 2>&1
 	[ "$send_disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "2" ] && curl -s "http://sctapi.ftqq.com/${sctkey}.send?text=${send_title}" -d "desp=${nowtime}${markdown_linefeed}${send_content}" >/dev/null 2>&1
 	[ "$send_disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "1" ] && curl -d "text=${send_title}${markdown_linefeed}${nowtime}${markdown_linefeed}${send_content}" -X POST "${tgtoken}" >/dev/null 2>&1
+	if [ "$send_disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "3" ] ;then
+	ssss=$(echo ${nowtime}${markdown_linefeed}${send_content} | sed 's/%0D%0A%0D%0A/\<br \/\>/g')
+#	echo $ssss
+#	echo $qyid
+	ss=$(curl "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${qyid}&corpsecret=${qySecret}")
+#	echo $ss
+	s=$(echo ${ss#*access_token"\"":"\""} | awk -F"\"" '{print $1}')
+#	echo $s
+	curl -s "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$s" \
+       -H 'Content-Type': 'application/json' \
+       -d '
+       { 
+       "touser" : "'"${qytouser}"'", 
+       "toparty" : "@all", 
+       "totag": "@all", 
+       "msgtype" : "mpnews", 
+       "agentid" : "'"${qyAgentId}"'", 
+       "mpnews" : { 
+           "articles":[ 
+               { 
+                   "title": "'"${send_title}"'",  
+                   "thumb_media_id": "'"${qythumb_media_id}"'" , 
+                   "author": "Author", 
+                   "content_source_url": "", 
+                   "content": "'"${ssss}"'", 
+                   "digest": "'"${send_title}"'" 
+                } 
+           ] 
+       }, 
+       "safe":0, 
+    }' 
+fi
+
 	deltemp
 	echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}定时推送任务完成" >> ${logfile}
 }
@@ -985,6 +1018,39 @@ while [ "$serverchan_enable" -eq "1" ]; do
 		[ "$disturb" -eq "0" ] && [ -z "$send_tg" ] && curl -s "http://sc.ftqq.com/${sckey}.send?text=${title}" -d "desp=${nowtime}${markdown_linefeed}${content}" >/dev/null 2>&1
 		[ "$disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "2" ] && curl -s "http://sctapi.ftqq.com/${sctkey}.send?text=${title}" -d "desp=${nowtime}${markdown_linefeed}${content}" >/dev/null 2>&1
 		[ "$disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "1" ] && curl -d "text=${title}${markdown_linefeed}${nowtime}${markdown_linefeed}${content}" -X POST "${tgtoken}" >/dev/null 2>&1
+	if [ "$send_disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "3" ] ;then
+	ssss=$(echo ${nowtime}${markdown_linefeed}${send_content} | sed 's/%0D%0A%0D%0A/\<br \/\>/g')
+#	echo $ssss
+#	echo $qyid
+	ss=$(curl "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${qyid}&corpsecret=${qySecret}")
+#	echo $ss
+	s=$(echo ${ss#*access_token"\"":"\""} | awk -F"\"" '{print $1}')
+#	echo $s
+	curl -s "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$s" \
+       -H 'Content-Type': 'application/json' \
+       -d '
+       { 
+       "touser" : "'"${qytouser}"'", 
+       "toparty" : "@all", 
+       "totag": "@all", 
+       "msgtype" : "mpnews", 
+       "agentid" : "'"${qyAgentId}"'", 
+       "mpnews" : { 
+           "articles":[ 
+               { 
+                   "title": "'"${send_title}"'",  
+                   "thumb_media_id": "'"${qythumb_media_id}"'" , 
+                   "author": "Author", 
+                   "content_source_url": "", 
+                   "content": "'"${ssss}"'", 
+                   "digest": "'"${send_title}"'" 
+                } 
+           ] 
+       }, 
+       "safe":0, 
+    }' 
+fi
+
 	fi
 	
 	while [ -f "${dir}send_enable.lock" ]; do
@@ -992,4 +1058,3 @@ while [ "$serverchan_enable" -eq "1" ]; do
 	done
 	sleep $sleeptime
 done
-
