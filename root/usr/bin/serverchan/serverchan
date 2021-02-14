@@ -910,7 +910,9 @@ function send(){
 	[ "$send_disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "2" ] && curl -s "http://sctapi.ftqq.com/${sctkey}.send?text=${send_title}" -d "desp=${nowtime}${markdown_linefeed}${send_content}" >/dev/null 2>&1
 	[ "$send_disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "1" ] && curl -d "text=${send_title}${markdown_linefeed}${nowtime}${markdown_linefeed}${send_content}" -X POST "${tgtoken}" >/dev/null 2>&1
 	if [ "$send_disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "3" ] ;then
-	ssss=$(echo ${nowtime}${markdown_linefeed}${send_content} | sed 's/%0D%0A%0D%0A/\<br \/\>/g')
+#	echo ${nowtime}${markdown_linefeed}${send_content}
+	ssss=$(echo ${nowtime}${markdown_linefeed}${send_content}  | sed 's/---%0D%0A%0D%0A####/\<br \/\>#/g' | sed 's/%0D%0A%0D%0A%0D%0A%0D%0A/\<br \/\>/g' | sed 's/%0D%0A%0D%0A/\<br \/\>/g' | sed 's/%25/\%/g' | sed 's/%e2%84%83/\℃/g')
+	sssss=$(echo ${nowtime}${markdown_linefeed}${send_content} | sed 's/---%0D%0A%0D%0A####/\n#/g' | sed 's/%0D%0A%0D%0A%0D%0A%0D%0A/\n/g' | sed 's/%0D%0A%0D%0A/\n/g' | sed 's/%25/\%/g' | sed 's/%e2%84%83/\℃/g')
 #	echo $ssss
 #	echo $qyid
 	ss=$(curl "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${qyid}&corpsecret=${qySecret}")
@@ -931,10 +933,10 @@ function send(){
                { 
                    "title": "'"${send_title}"'",  
                    "thumb_media_id": "'"${qythumb_media_id}"'" , 
-                   "author": "Author", 
+                   "author": "UNN", 
                    "content_source_url": "", 
                    "content": "'"${ssss}"'", 
-                   "digest": "'"${send_title}"'" 
+                   "digest": "'"${sssss}"'" 
                 } 
            ] 
        }, 
@@ -1019,7 +1021,9 @@ while [ "$serverchan_enable" -eq "1" ]; do
 		[ "$disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "2" ] && curl -s "http://sctapi.ftqq.com/${sctkey}.send?text=${title}" -d "desp=${nowtime}${markdown_linefeed}${content}" >/dev/null 2>&1
 		[ "$disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "1" ] && curl -d "text=${title}${markdown_linefeed}${nowtime}${markdown_linefeed}${content}" -X POST "${tgtoken}" >/dev/null 2>&1
 	if [ "$send_disturb" -eq "0" ] && [ ! -z "$send_tg" ] && [ "$send_tg" -eq "3" ] ;then
-	ssss=$(echo ${nowtime}${markdown_linefeed}${send_content} | sed 's/%0D%0A%0D%0A/\<br \/\>/g')
+#	echo ${nowtime}${markdown_linefeed}${content}
+	ssss=$(echo ${nowtime}${markdown_linefeed}${content}  | sed 's/---%0D%0A%0D%0A####/\<br \/\>#/g' | sed 's/%0D%0A%0D%0A%0D%0A%0D%0A/\<br \/\>/g' | sed 's/%0D%0A%0D%0A/\<br \/\>/g' | sed 's/%25/\%/g' | sed 's/%e2%84%83/\℃/g')
+	sssss=$(echo ${nowtime}${markdown_linefeed}${content} | sed 's/---%0D%0A%0D%0A####/\n#/g' | sed 's/%0D%0A%0D%0A%0D%0A%0D%0A/\n/g' | sed 's/%0D%0A%0D%0A/\n/g' | sed 's/%25/\%/g' | sed 's/%e2%84%83/\℃/g')
 #	echo $ssss
 #	echo $qyid
 	ss=$(curl "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${qyid}&corpsecret=${qySecret}")
@@ -1040,10 +1044,10 @@ while [ "$serverchan_enable" -eq "1" ]; do
                { 
                    "title": "'"${send_title}"'",  
                    "thumb_media_id": "'"${qythumb_media_id}"'" , 
-                   "author": "Author", 
+                   "author": "UNN", 
                    "content_source_url": "", 
                    "content": "'"${ssss}"'", 
-                   "digest": "'"${send_title}"'" 
+                   "digest": "'"${sssss}"'" 
                 } 
            ] 
        }, 
@@ -1058,3 +1062,4 @@ fi
 	done
 	sleep $sleeptime
 done
+
